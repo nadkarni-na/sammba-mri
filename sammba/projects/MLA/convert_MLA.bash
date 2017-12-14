@@ -6,9 +6,10 @@ rawdatadir=$(readlink -e $1)
 savedir=$(readlink -e $2)
 savename=$3
 ZP=$4
-saverawmeanvid=$5
+isores=$5
+saverawmeanvid=$6
 
-find -L $rawdatadir -type d -name '*T2Lemur*.fid' | grep -v Mc147BCBB-01-s_2011042110/ptk_server_task_1 | sort > $savedir/rawdatadirs.txt
+find -L $rawdatadir -type d -name '*T2Lemur*.fid' | grep -v Mc147BCBB-01-s_2011042110-ptk_server_tasks/ptk_server_task_4 | sort > $savedir/rawdatadirs.txt
 nlines=$(wc -l $savedir/rawdatadirs.txt | awk '{print $1}')
 
 for ((a=1; a<=$nlines; a++)); do
@@ -18,7 +19,9 @@ for ((a=1; a<=$nlines; a++)); do
 	newniftidir=$savedir/$newnifti
 	mkdir -p $newniftidir
 	
-	python -m VarianAgilentFIDtoNIfTI.py $fiddir $newniftidir/$savename $ZP
+	python -m VarianAgilentFIDtoNIfTI.py $fiddir $newniftidir/ZP.nii.gz $ZP
+	3dresample -rmode Cubic -dxyz $isores $isores $isores -prefix $newniftidir/$savename -input $newniftidir/ZP.nii.gz
+	3dZeropad -RL 256 -AP 256 -IS 256 -prefix $newniftidir/$savename $newniftidir/$savename
 	
 done
 

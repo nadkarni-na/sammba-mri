@@ -7,18 +7,21 @@ brainvol=$2
 R=$3
 b=$4
 t=$5
+clfrac1=$6
+clfrac2=$7
 
 cd $savedir
 
 for dir in $(find -mindepth 1 -maxdepth 1 -type d); do
 
-	3dUnifize -prefix $dir/Un.nii.gz -input $dir/anat.nii.gz -rbt $R $b $t
+	3dUnifize -prefix $dir/UnRATS.nii.gz -input $dir/anat.nii.gz -rbt $R $b $t -clfrac $clfrac1
+	3dUnifize -prefix $dir/Un.nii.gz -input $dir/anat.nii.gz -rbt $R $b $t -clfrac $clfrac2
 
-	thresh=$(3dClipLevel $dir/Un.nii.gz)
+	thresh=$(3dClipLevel $dir/UnRATS.nii.gz)
 	printf -v thresh %.0f "$thresh"
 	echo "brain/background threshold=$thresh"
 
-	RATS_MM $dir/Un.nii.gz $dir/UnBm.nii.gz -v $brainvol -t $thresh
+	RATS_MM $dir/UnRATS.nii.gz $dir/UnBm.nii.gz -v $brainvol -t $thresh
 
 	fsl5.0-fslmaths $dir/Un.nii.gz -mas $dir/UnBm.nii.gz $dir/UnBmBe.nii.gz
 	

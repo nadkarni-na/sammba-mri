@@ -13,18 +13,18 @@ export PYTHONPATH
 
 projectdir=/home/Pmamobipet/Tvx-Manips-MD_/MD_1701-Microcebe-Creation-Atlas
 rawdatadir=$projectdir/MRI-Images-Brutes
-savedir=$projectdir/processed_20170915
+savedir=$projectdir/processed_20171130
 mkdir $savedir
 
 conv=0.01
 twoblur=2
 brainvol=1600
 #-rbt values might be improveable
-Urad=9.15
+Urad=18.3
 b=70
 t=80
 
-bash convert_MLA.bash $rawdatadir $savedir anat.nii.gz 0 yes
+bash convert_MLA.bash $rawdatadir $savedir anat.nii.gz 256 0.115 yes
 bash MRIT2_extrcen.bash $savedir $brainvol $Urad $b $t
 
 3dcopy $projectdir/bonsatlasprocessing/bonstack_dupflipcomb.hdr $savedir/bons.nii.gz
@@ -46,25 +46,16 @@ bash MRIT4_aff.bash $savedir $savedir/shr2_meanhead.nii.gz 2 3 $conv $twoblur $s
 3dcalc -a $savedir/aff3_meanhead.nii.gz -expr 'step(2-(x+6.15)*(x+6.15)-(y+4.08)*(y+4.08)-(z-5)*(z-5))' -prefix $savedir/rightcolliculus.nii.gz
 3dcalc -a $savedir/aff3_meanhead.nii.gz -expr 'step(2-(x-6.15)*(x-6.15)-(y+4.08)*(y+4.08)-(z-5)*(z-5))' -prefix $savedir/leftcolliculus.nii.gz
 3dmask_tool -union -inputs $savedir/aff3_frac05mask.nii.gz $savedir/rightcolliculus.nii.gz $savedir/leftcolliculus.nii.gz -prefix $savedir/aff3_unionmask.nii.gz
-3dmask_tool -dilate_inputs 4 -inputs $savedir/aff3_unionmask.nii.gz -prefix $savedir/aff3_unionmaskdil4.nii.gz
-weight=$savedir/aff3_unionmaskdil4.nii.gz
+3dmask_tool -dilate_inputs 5 -inputs $savedir/aff3_unionmask.nii.gz -prefix $savedir/aff3_unionmaskdil5.nii.gz
+weight=$savedir/aff3_unionmaskdil5.nii.gz
 
 bash MRIT5_Qw.bash $savedir $savedir/aff3_meanhead.nii.gz $weight UnCC.nii.gz UnBmBeCCAl2UnCCAl3.aff12.1D 0 2 1
-bash MRIT5_Qw.bash $savedir $savedir/Qw1_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw1_WARP.nii.gz 3 4 2
-bash MRIT5_Qw.bash $savedir $savedir/Qw2_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw2_WARP.nii.gz 5 6 3
-bash MRIT6_Qw.bash $savedir $savedir/Qw3_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw3_WARP.nii.gz 7 15 4
-bash MRIT6_Qw.bash $savedir $savedir/Qw4_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw4_WARP.nii.gz 9 7 5
-bash MRIT6_Qw.bash $savedir $savedir/Qw5_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw5_WARP.nii.gz 11 5 6
-bash MRIT7_origproc.bash $savedir 4
-bash MRIT8_TBM.bash $savedir UnCCQw4_WARP.nii.gz
-
-bash convert_MLA.bash $rawdatadir $savedir anat512.nii.gz 512 no
-
-3dresample -dxyz 0.0575 0.0575 0.0575 -prefix ../emptytemplate512.nii.gz -input ../emptytemplate.nii.gz
-
-3drefit -duporigin anat.nii.gz anat512.nii.gz
-3dresample -master ../emptytemplate512.nii.gz -prefix anat512CC.nii.gz -inset anat512.nii.g
-3dNwarpApply -nwarp UnCCQw5_WARP.nii.gz -source anat512CC.nii.gz -prefix anat512CC_Na.nii.gz
+bash MRIT5_Qw.bash $savedir $savedir/Qw1_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw1_WARP.nii.gz 3 5 2
+bash MRIT5_Qw.bash $savedir $savedir/Qw2_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw2_WARP.nii.gz 6 8 3
+bash MRIT6_Qw.bash $savedir $savedir/Qw3_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw3_WARP.nii.gz 9 15 4
+bash MRIT6_Qw.bash $savedir $savedir/Qw4_meanhead.nii.gz $weight UnCC.nii.gz UnCCQw4_WARP.nii.gz 11 7 5
+bash MRIT7_origproc.bash $savedir 5
+bash MRIT8_TBM.bash $savedir UnCCQw5_WARP.nii.gz
 
 3dMean -stdev -prefix $savedir/bulkstdev.nii.gz $(find $savedir -name 'bulk.nii.gz')
 3dZeropad -master $savedir/aff3_unionmask.nii.gz -prefix $savedir/bulkstdevZP.nii.gz $savedir/bulkstdev.nii.gz
